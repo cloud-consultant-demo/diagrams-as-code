@@ -4,21 +4,21 @@ from diagrams.aws.compute import EC2
 from diagrams.aws.database import RDS
 from diagrams.aws.network import ALB 
 from diagrams.aws.network import ClientVpn  
-from diagrams.aws.general import Users    
-from diagrams.aws.general import InternetAlt2    
+from diagrams.onprem.client import Users    
+from diagrams.onprem.network import Internet 
 
 
-web_app_name = "Three tier web application"
+web_app_name = "AWS Three-tier Classic Web Application"
 with Diagram(web_app_name, show=False):
     clients = Users("Clients")
-    internet = InternetAlt2("Internet")
+    internet = Internet("Internet")
     with Cluster("VPC"):
         ALBFI = ALB("ALB (Facing internet)")
         with Cluster ("Private Subnet"):
             ALBFP = ALB("ALB (Facing Private)")
-            with Cluster ("Auto Scaling Group"):
+            with Cluster ("Frontend\nAuto Scaling Group"):
                 EC2_Web_Tier = [EC2("Web Tier"), EC2("Web Tier"), EC2("Web Tier")]
-            with Cluster ("ASG App Tier"):
+            with Cluster ("Backend\nAuto Scaling Group"):
                 EC2_App_Tier = [EC2("App Tier"), EC2("App Tier"), EC2("App Tier")]
             with Cluster("Database Tier"):
                 DB = RDS("RDS")

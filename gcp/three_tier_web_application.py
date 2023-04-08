@@ -1,26 +1,23 @@
-from diagrams import Cluster, Diagram
-from diagrams.gcp.compute import GCE
+from diagrams import Diagram, Cluster
+from diagrams.gcp.compute import ComputeEngine
 from diagrams.gcp.database import SQL
-from diagrams.gcp.network import LoadBalancing, VPC
-from diagrams.gcp.network import FirewallRules
+from diagrams.gcp.network import LoadBalancing
+from diagrams.onprem.client import Users    
+from diagrams.onprem.network import Internet   
 
-with Diagram("Arquitectura GCP", show=False):
-    with Cluster("Frontend"):
-        frontend_instance_group = GCE("Frontend Instance Group")
-        frontend_vm = GCE("Frontend VMs") << frontend_instance_group
-        frontend_lb = LoadBalancing("HTTP(S) LB") >> frontend_vm
+web_app_name = "GCP Three-tier Classic Web Application"
+with Diagram(web_app_name, show=False):
+    clients = Users("Clients")
+    internet = Internet("Internet")
+    with Cluster("Virtual Network"):
+        LBFI = LoadBalancing("Load Balancer (Facing Internet)")
+        with Cluster ("Private Subnet"):
+            LBFP = LoadBalancing("Load Balancer (Facing Private)")
+            with Cluster("Frontend\nManaged Instance Groups"):
+                VM_Web_Tier = [ComputeEngine("Web"), ComputeEngine("Web"), ComputeEngine("Web")]
+            with Cluster("Backend\nManaged Instance Groups"):
+                VM_App_Tier = [ComputeEngine("App"), ComputeEngine("App"), ComputeEngine("App")]
+            with Cluster("Database Tier"):
+                DB = SQL("Cloud SQL") 
+    clients >> internet >> LBFI >> VM_Web_Tier >> LBFP >> VM_App_Tier >> DB
 
-    with Cluster("Backend"):
-        backend_instance_group = GCE("Backend Instance Group")
-        backend_vm = GCE("Backend VMs") << backend_instance_group
-        backend_lb = LoadBalancing("HTTP(S) LB") >> backend_vm
-
-    frontend_vm >> VPC("VPC") >> backend_vm
-
-    with Cluster("Capa de Datos"):
-        db = SQL("Cloud SQL")
-
-    backend_vm >> db
-
-    frontend_lb << FirewallRules("Firewall Rules")
-    backend_lb << FirewallRules("Firewall Rules")
